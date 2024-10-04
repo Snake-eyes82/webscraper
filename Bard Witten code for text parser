@@ -1,0 +1,59 @@
+import time
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.support.ui
+import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+def find_home_depot_locations(zip_code):
+    """
+    Finds Home Depot locations near a given zip code using Selenium.
+
+    Args: zip_code (str): The zip code to search for.
+
+    Returns: list: A list of strings, each containing the name of a Home Depot location.
+    """
+
+    options = webdriver.ChromeOptions()
+    options.add_argument('--headless')  # Optional for headless mode
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+
+    try:
+        driver.get('https://www.homedepot.com/c/site_map/')
+        driver.maximize_window()
+        time.sleep(2)  # Adjust wait time as needed
+
+        # Using CSS selector as an example (adjust if needed)
+        wait = WebDriverWait(driver, 10)
+        search_box = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[id='headerSearchInput']")))
+        search_box.send_keys(zip_code)
+        search_box.send_keys(Keys.ENTER)
+
+        time.sleep(5)  # Adjust wait time for page loading
+
+        soup = BeautifulSoup(driver.page_source, 'lxml')
+        locations = []
+        for tag in soup.find_all('div', class_="LocationName"):
+            locations.append(tag.text.strip())
+
+        return locations
+
+    except Exception as e:
+        print(f"An error occurred while scraping: {e}")
+        return []
+    finally:
+        driver.quit()
+
+if __name__ == '__main__':
+    zip_code = input("Enter a zip code: ")
+    locations = find_home_depot_locations(zip_code)
+
+    if locations:
+        print(f"Home Depot locations near {zip_code}:")
+        for location in locations:
+            print(location)
+    else:
+        print("No Home Depot locations found for that zip code.")
